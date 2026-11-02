@@ -38,6 +38,8 @@ input[aria-invalid=true],.amount.bad{border-color:var(--err)}
 .btn{flex:1;height:44px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .file{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+/* Keep file inputs in the layout/accessibility tree; display:none/hidden can block picker activation in some iOS WebViews. */
+.file-input{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;opacity:0!important}
 .file img{flex:none;width:52px;height:64px;object-fit:cover;border-radius:8px;background:#E6EAEE}
 .file .info{flex:1;min-width:0}
 .file .name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -124,8 +126,8 @@ footer{position:sticky;bottom:0;padding:12px 20px calc(16px + env(safe-area-inse
           </div>
           <button type="button" class="del" id="btnRemove">ลบ</button>
         </div>
-        <input id="fileCamera" type="file" accept="image/*" capture="environment" hidden>
-        <input id="fileGallery" type="file" accept="image/*" hidden>
+        <input id="fileCamera" class="file-input" type="file" accept="image/*" capture="environment" aria-label="ถ่ายรูปใบเสร็จ">
+        <input id="fileGallery" class="file-input" type="file" accept="image/*" aria-label="เลือกรูปใบเสร็จจากอัลบั้ม">
       </div>
     </main>
 
@@ -157,8 +159,8 @@ footer{position:sticky;bottom:0;padding:12px 20px calc(16px + env(safe-area-inse
 <script>
 /* ===== ตั้งค่า 2 ค่านี้ก่อนใช้งาน ===== */
 const CONFIG = {
-  LIFF_ID: '2012334032-ScbJwgha', 
-  API_URL: 'https://script.google.com/macros/s/AKfycbwjnGlERk5gpv2NAkBJn3Wd2D_oliInAelYwrvVTRTuyYWeGB4NkN_7boZQGs9G1GrN/exec',
+  LIFF_ID: '2012334032-ScbJwgha',  // เช่น '1234567890-AbCdEfGh'
+  API_URL: 'https://script.google.com/macros/s/AKfycbwjnGlERk5gpv2NAkBJn3Wd2D_oliInAelYwrvVTRTuyYWeGB4NkN_7boZQGs9G1GrN/exec',  // URL ของ Apps Script Web app (ลงท้ายด้วย /exec)''
   DEFAULT_PROJECTS: ['โปรเจกต์ A', 'โปรเจกต์ B', 'โปรเจกต์ C', 'ส่วนกลาง']
 };
 
@@ -231,8 +233,17 @@ async function loadProjects() {
 }
 
 /* ---------- ใบเสร็จ ---------- */
-$('btnCamera').addEventListener('click', () => $('fileCamera').click());
-$('btnGallery').addEventListener('click', () => $('fileGallery').click());
+// Call input.click() synchronously from the user's button tap (required by iOS WebView).
+$('btnCamera').addEventListener('click', () => {
+  const input = $('fileCamera');
+  input.value = '';
+  input.click();
+});
+$('btnGallery').addEventListener('click', () => {
+  const input = $('fileGallery');
+  input.value = '';
+  input.click();
+});
 $('fileCamera').addEventListener('change', onFile);
 $('fileGallery').addEventListener('change', onFile);
 $('btnRemove').addEventListener('click', clearReceipt);
