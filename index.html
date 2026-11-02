@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>บันทึกรายจ่าย</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+:root{--accent:#04803A;--ink:#1B1F23;--mute:#5B636B;--line:#CBD2D9;--bg:#F3F5F7;--err:#B42318}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+button,input{font-family:inherit}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+header{height:64px;display:flex;flex-direction:column;justify-content:center;padding:0 20px;background:#fff;border-bottom:1px solid #E3E7EB}
+h1{font-size:18px;margin:0;font-weight:700}
+header p{margin:2px 0 0;font-size:12px;color:var(--mute)}
+form{flex:1;display:flex;flex-direction:column}
+main{flex:1;padding:16px 20px;display:flex;flex-direction:column;gap:16px}
+.lbl{display:block;font-size:13px;font-weight:600;color:#3A4047;margin-bottom:6px}
+.req{color:var(--err)}
+.hint{margin:6px 0 0;font-size:12px;color:var(--mute)}
+input[type=text],input[type=date]{width:100%;height:48px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font-size:16px;background:#fff;color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[aria-invalid=true],.amount.bad{border-color:var(--err)}
+.amount{display:flex;align-items:center;gap:8px;height:48px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:#fff}
+.amount:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.amount .cur{font-size:18px;font-weight:600;color:var(--mute)}
+.amount .unit{font-size:14px;color:var(--mute)}
+.amount input{flex:1;min-width:0;width:auto;height:100%;border:0;border-radius:0;padding:0;outline:0;font-size:20px;font-weight:600;background:transparent}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:40px;padding:0 16px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;color:var(--ink);border:1px solid var(--line)}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chips.bad .chip{border-color:var(--err)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;border:1.5px dashed #AEB7C0;border-radius:14px;background:#fff}
+.drop.bad{border-color:var(--err)}
+.drop .msg{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mute)}
+.row{display:flex;gap:10px;width:100%}
+.btn{flex:1;height:44px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.file{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.file img{flex:none;width:52px;height:64px;object-fit:cover;border-radius:8px;background:#E6EAEE}
+.file .info{flex:1;min-width:0}
+.file .name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file .size{font-size:12px;color:var(--accent);font-weight:500}
+.file .del{height:44px;padding:0 12px;border:0;background:transparent;color:var(--err);font-size:14px;font-weight:600;cursor:pointer}
+footer{position:sticky;bottom:0;padding:12px 20px calc(16px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #E3E7EB}
+#submit{width:100%;height:52px;border:0;border-radius:14px;background:var(--accent);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+#submit:disabled{opacity:.6;cursor:default}
+.error{margin:0 0 10px;font-size:13px;color:var(--err);font-weight:500}
+.error:empty{display:none}
+.banner{margin:12px 20px 0;padding:10px 12px;border-radius:10px;background:#FFF4E5;color:#8A4B00;font-size:13px}
+.banner[hidden]{display:none}
+#done{flex:1;padding:40px 20px 16px;display:flex;flex-direction:column;align-items:center;gap:20px}
+#done[hidden],form[hidden]{display:none}
+.tick{width:72px;height:72px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center}
+#done h2{margin:0;font-size:22px}
+.card{width:100%;background:#fff;border:1px solid #E3E7EB;border-radius:16px;padding:4px 16px;margin:0}
+.card div{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #EEF1F4}
+.card div:last-child{border-bottom:0}
+.card dt{font-size:13px;color:var(--mute);flex:none}
+.card dd{margin:0;font-size:15px;font-weight:600;text-align:right;word-break:break-word}
+.status{width:100%;display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3A4047}
+.actions{width:100%;display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.actions .btn{flex:none;height:52px;font-size:16px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>บันทึกรายจ่าย</h1>
+    <p id="who">ส่งเข้า Google Sheet อัตโนมัติ</p>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+
+  <form id="form" novalidate>
+    <main>
+      <div>
+        <label class="lbl" for="date">วันที่ซื้อของ <span class="req">*</span></label>
+        <input id="date" type="date">
+      </div>
+
+      <div>
+        <label class="lbl" for="vendor">ชื่อผู้ขาย <span class="req">*</span></label>
+        <input id="vendor" type="text" maxlength="200" placeholder="เช่น ร้าน/บริษัทที่ซื้อ" autocomplete="off">
+      </div>
+
+      <div>
+        <label class="lbl" for="amount">ยอดจ่ายสุทธิ <span class="req">*</span></label>
+        <div class="amount" id="amountBox">
+          <span class="cur">฿</span>
+          <input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+          <span class="unit">บาท</span>
+        </div>
+        <p class="hint">รวม VAT และหักส่วนลดแล้ว</p>
+      </div>
+
+      <div>
+        <label class="lbl" for="purpose">วัตถุประสงค์ <span class="req">*</span></label>
+        <input id="purpose" type="text" maxlength="300" placeholder="ซื้อเพื่ออะไร" autocomplete="off">
+      </div>
+
+      <div>
+        <span class="lbl" id="projLbl">Project <span class="req">*</span></span>
+        <div class="chips" id="projects" role="group" aria-labelledby="projLbl"></div>
+      </div>
+
+      <div>
+        <span class="lbl">ใบเสร็จ / หลักฐานการจ่ายเงิน <span class="req">*</span></span>
+        <div class="drop" id="receiptEmpty">
+          <div class="msg">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            แนบรูปใบเสร็จหรือสลิปโอนเงิน
+          </div>
+          <div class="row">
+            <button type="button" class="btn primary" id="btnCamera">ถ่ายรูป</button>
+            <button type="button" class="btn" id="btnGallery">เลือกจากอัลบั้ม</button>
+          </div>
+        </div>
+        <div class="file" id="receiptReady" hidden>
+          <img id="thumb" alt="ตัวอย่างใบเสร็จ">
+          <div class="info">
+            <div class="name" id="fileName"></div>
+            <div class="size" id="fileSize"></div>
+          </div>
+          <button type="button" class="del" id="btnRemove">ลบ</button>
+        </div>
+        <input id="fileCamera" type="file" accept="image/*" capture="environment" hidden>
+        <input id="fileGallery" type="file" accept="image/*" hidden>
+      </div>
+    </main>
+
+    <footer>
+      <p class="error" id="error" role="alert"></p>
+      <button type="submit" id="submit">บันทึกรายจ่าย</button>
+    </footer>
+  </form>
+
+  <section id="done" hidden>
+    <div class="tick">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </div>
+    <h2>บันทึกสำเร็จ</h2>
+    <dl class="card" id="summary"></dl>
+    <div class="status">
+      <div>✓ เพิ่มแถวใหม่ใน Google Sheet แล้ว</div>
+      <div>✓ เก็บไฟล์ใบเสร็จไว้ใน Google Drive แล้ว</div>
+      <div id="chatStatus"></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="btnNext">บันทึกรายการถัดไป</button>
+      <button type="button" class="btn" id="btnClose">ปิด</button>
+    </div>
+  </section>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+/* ===== ตั้งค่า 2 ค่านี้ก่อนใช้งาน ===== */
+const CONFIG = {
+  LIFF_ID: '',  // เช่น '1234567890-AbCdEfGh'
+  API_URL: ''https://script.google.com/macros/s/AKfycbwjnGlERk5gpv2NAkBJn3Wd2D_oliInAelYwrvVTRTuyYWeGB4NkN_7boZQGs9G1GrN/exec'',  // URL ของ Apps Script Web app (ลงท้ายด้วย /exec)
+  DEFAULT_PROJECTS: ['โปรเจกต์ A', 'โปรเจกต์ B', 'โปรเจกต์ C', 'ส่วนกลาง']
+};
+
+const $ = (id) => document.getElementById(id);
+let receipt = null;   // { name, size, base64, url }
+let project = '';
+let liffReady = false;
+
+const pad = (n) => String(n).padStart(2, '0');
+const todayStr = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+};
+const fmtMoney = (n) => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtDate = (s) => {
+  const p = s.split('-').map(Number);
+  return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+function showBanner(text) {
+  $('banner').textContent = text;
+  $('banner').hidden = !text;
+}
+
+/* ---------- เริ่มต้น ---------- */
+async function init() {
+  $('date').value = todayStr();
+  $('date').max = todayStr();
+  loadProjects();
+
+  if (!CONFIG.LIFF_ID || !CONFIG.API_URL) {
+    showBanner('ยังไม่ได้ตั้งค่า LIFF_ID / API_URL ในไฟล์นี้ (โหมดดูหน้าตาเท่านั้น บันทึกจริงไม่ได้)');
+    return;
+  }
+  try {
+    await liff.init({ liffId: CONFIG.LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+    liffReady = true;
+    const profile = await liff.getProfile();
+    $('who').textContent = 'ผู้บันทึก: ' + profile.displayName;
+  } catch (e) {
+    showBanner('เชื่อมต่อ LINE ไม่สำเร็จ: ' + e.message);
+  }
+}
+
+async function loadProjects() {
+  let list = CONFIG.DEFAULT_PROJECTS;
+  if (CONFIG.API_URL) {
+    try {
+      const r = await fetch(CONFIG.API_URL);
+      const j = await r.json();
+      if (j.ok && j.projects && j.projects.length) list = j.projects;
+    } catch (e) { /* ใช้รายการเริ่มต้น */ }
+  }
+  const box = $('projects');
+  box.textContent = '';
+  list.forEach((name) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.textContent = name;
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => {
+      project = name;
+      box.classList.remove('bad');
+      box.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
+    });
+    box.appendChild(b);
+  });
+}
+
+/* ---------- ใบเสร็จ ---------- */
+$('btnCamera').addEventListener('click', () => $('fileCamera').click());
+$('btnGallery').addEventListener('click', () => $('fileGallery').click());
+$('fileCamera').addEventListener('change', onFile);
+$('fileGallery').addEventListener('change', onFile);
+$('btnRemove').addEventListener('click', clearReceipt);
+
+function clearReceipt() {
+  if (receipt && receipt.url) URL.revokeObjectURL(receipt.url);
+  receipt = null;
+  $('receiptEmpty').hidden = false;
+  $('receiptReady').hidden = true;
+  $('fileCamera').value = '';
+  $('fileGallery').value = '';
+}
+
+async function onFile(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  $('error').textContent = '';
+  try {
+    $('btnCamera').disabled = $('btnGallery').disabled = true;
+    const out = await compressImage(file);
+    if (receipt && receipt.url) URL.revokeObjectURL(receipt.url);
+    const url = URL.createObjectURL(out.blob);
+    receipt = { name: file.name || 'receipt.jpg', size: out.blob.size, base64: out.base64, url: url };
+    $('thumb').src = url;
+    $('fileName').textContent = receipt.name;
+    $('fileSize').textContent = 'พร้อมอัปโหลด · ' + Math.max(1, Math.round(out.blob.size / 1024)) + ' KB';
+    $('receiptEmpty').hidden = true;
+    $('receiptEmpty').classList.remove('bad');
+    $('receiptReady').hidden = false;
+  } catch (e) {
+    $('error').textContent = 'อ่านรูปไม่สำเร็จ ลองเลือกรูปอื่น (รองรับไฟล์รูปภาพ)';
+  } finally {
+    $('btnCamera').disabled = $('btnGallery').disabled = false;
+  }
+}
+
+/* ย่อรูปให้ด้านยาวไม่เกิน 1600px และบีบเป็น JPEG เพื่อให้ส่งไวและไม่เปลืองที่ */
+async function compressImage(file) {
+  let source, w, h;
+  try {
+    source = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    w = source.width; h = source.height;
+  } catch (e) {
+    source = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+    w = source.naturalWidth; h = source.naturalHeight;
+  }
+  const scale = Math.min(1, 1600 / Math.max(w, h));
+  const cw = Math.round(w * scale), ch = Math.round(h * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = cw; canvas.height = ch;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, cw, ch);
+  ctx.drawImage(source, 0, 0, cw, ch);
+  const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.8));
+  const base64 = await new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result).split(',')[1]);
+    fr.onerror = reject;
+    fr.readAsDataURL(blob);
+  });
+  return { blob: blob, base64: base64 };
+}
+
+/* ---------- ยอดเงิน ---------- */
+$('amount').addEventListener('blur', () => {
+  const n = parseAmount($('amount').value);
+  if (n !== null) $('amount').value = fmtMoney(n);
+});
+$('amount').addEventListener('focus', () => {
+  $('amount').value = $('amount').value.replace(/,/g, '');
+});
+function parseAmount(s) {
+  const t = String(s).replace(/[,\s฿]/g, '');
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) return null;
+  const n = Number(t);
+  return n > 0 && n < 10000000 ? n : null;
+}
+
+/* ---------- ส่งข้อมูล ---------- */
+$('form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const err = $('error');
+  err.textContent = '';
+  ['date', 'vendor', 'purpose'].forEach((id) => $(id).removeAttribute('aria-invalid'));
+  $('amountBox').classList.remove('bad');
+  $('projects').classList.remove('bad');
+  $('receiptEmpty').classList.remove('bad');
+
+  const v = {
+    date: $('date').value,
+    vendor: $('vendor').value.trim(),
+    amount: parseAmount($('amount').value),
+    purpose: $('purpose').value.trim(),
+    project: project
+  };
+
+  let problem = null;
+  if (!v.date) { problem = ['date', 'กรุณาเลือกวันที่ซื้อของ']; }
+  else if (!v.vendor) { problem = ['vendor', 'กรุณากรอกชื่อผู้ขาย']; }
+  else if (v.amount === null) { problem = ['amount', 'กรุณากรอกยอดจ่ายเป็นตัวเลข เช่น 1284.50']; }
+  else if (!v.purpose) { problem = ['purpose', 'กรุณากรอกวัตถุประสงค์']; }
+  else if (!v.project) { problem = ['projects', 'กรุณาเลือก Project']; }
+  else if (!receipt) { problem = ['receipt', 'กรุณาแนบใบเสร็จหรือหลักฐานการจ่ายเงิน']; }
+
+  if (problem) {
+    err.textContent = problem[1];
+    if (problem[0] === 'amount') { $('amountBox').classList.add('bad'); $('amount').focus(); }
+    else if (problem[0] === 'projects') { $('projects').classList.add('bad'); }
+    else if (problem[0] === 'receipt') { $('receiptEmpty').classList.add('bad'); }
+    else { $(problem[0]).setAttribute('aria-invalid', 'true'); $(problem[0]).focus(); }
+    return;
+  }
+  if (!liffReady) { err.textContent = 'ยังเชื่อมต่อ LINE ไม่ได้ จึงบันทึกจริงไม่ได้ (ตรวจการตั้งค่า LIFF_ID / API_URL)'; return; }
+
+  const btn = $('submit');
+  btn.disabled = true;
+  btn.textContent = 'กำลังบันทึก…';
+  try {
+    const idToken = liff.getIDToken();
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ไม่ให้เบราว์เซอร์ส่ง preflight ที่ Apps Script ไม่รองรับ
+      body: JSON.stringify({
+        idToken: idToken,
+        date: v.date, vendor: v.vendor, amount: v.amount, purpose: v.purpose, project: v.project,
+        receipt: { name: receipt.name, mime: 'image/jpeg', base64: receipt.base64 }
+      })
+    });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || 'บันทึกไม่สำเร็จ');
+    await showDone(v);
+  } catch (e) {
+    err.textContent = 'บันทึกไม่สำเร็จ: ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'บันทึกรายจ่าย';
+  }
+});
+
+async function showDone(v) {
+  const dl = $('summary');
+  dl.textContent = '';
+  [
+    ['วันที่ซื้อของ', fmtDate(v.date)],
+    ['ชื่อผู้ขาย', v.vendor],
+    ['ยอดจ่ายสุทธิ', '฿' + fmtMoney(v.amount)],
+    ['วัตถุประสงค์', v.purpose],
+    ['Project', v.project],
+    ['ใบเสร็จ', 'แนบแล้ว 1 ไฟล์']
+  ].forEach((p) => {
+    const row = document.createElement('div');
+    const dt = document.createElement('dt'); dt.textContent = p[0];
+    const dd = document.createElement('dd'); dd.textContent = p[1];
+    row.appendChild(dt); row.appendChild(dd);
+    dl.appendChild(row);
+  });
+
+  // ส่งสรุปเข้าแชท LINE (ทำได้เมื่อเปิดฟอร์มจากในแชท และเปิดสิทธิ์ chat_message.write ไว้)
+  let chat = '';
+  try {
+    if (liff.isInClient()) {
+      await liff.sendMessages([{
+        type: 'text',
+        text: 'บันทึกรายจ่ายแล้ว\n' +
+          'วันที่: ' + fmtDate(v.date) + '\n' +
+          'ผู้ขาย: ' + v.vendor + '\n' +
+          'ยอดจ่าย: ฿' + fmtMoney(v.amount) + '\n' +
+          'วัตถุประสงค์: ' + v.purpose + '\n' +
+          'Project: ' + v.project
+      }]);
+      chat = '✓ ส่งสรุปเข้าแชท LINE แล้ว';
+    } else {
+      chat = 'ไม่ได้ส่งสรุปเข้าแชท (เปิดฟอร์มจากในแอป LINE เพื่อให้ส่งได้)';
+    }
+  } catch (e) {
+    chat = 'ส่งสรุปเข้าแชทไม่สำเร็จ แต่ข้อมูลลง Sheet เรียบร้อยแล้ว';
+  }
+  $('chatStatus').textContent = chat;
+
+  $('form').hidden = true;
+  $('done').hidden = false;
+  window.scrollTo(0, 0);
+}
+
+$('btnNext').addEventListener('click', () => {
+  $('vendor').value = '';
+  $('amount').value = '';
+  $('purpose').value = '';
+  $('date').value = todayStr();
+  project = '';
+  $('projects').querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+  clearReceipt();
+  $('error').textContent = '';
+  $('submit').disabled = false;
+  $('submit').textContent = 'บันทึกรายจ่าย';
+  $('done').hidden = true;
+  $('form').hidden = false;
+});
+$('btnClose').addEventListener('click', () => {
+  if (liffReady && liff.isInClient()) liff.closeWindow(); else window.close();
+});
+
+init();
+</script>
+</body>
+</html>
